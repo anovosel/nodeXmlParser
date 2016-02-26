@@ -13,13 +13,14 @@ var lines = [];
 
 lineReader.on('line', function (line) {
   lines.push(line);
-  console.log(lines.length);
+  //console.log(lines.length);
 });
 
 
 lineReader.on('close', function() {
-  console.log('procitao sve!')
-})
+    console.log('procitao sve!')
+    readTranslates();
+});
 
 
 
@@ -35,6 +36,20 @@ function jsToXml(jsObject) {
     }      
   });
 }
+
+
+
+function matchIds(translationId, callback) {
+    lines.forEach(function(line) {
+        var keys = line.split('\t');
+        if (keys[0].toString().trim() === translationId) {
+            callback(keys[1], keys[2]);
+        }
+    });
+}
+
+
+
 
 function processObject(object) {
   var files = object.xliff.file;
@@ -54,9 +69,10 @@ function processObject(object) {
                             translationUnit[keys[1]] +
                             '| ' +
                             translationUnit[keys[2]]);
-              translationUnit[keys[1]] = "Prevod";
-              translationUnit[keys[2]] = "Description";
-
+                matchIds(translationUnit[keys[0]].id, function(source, note) {
+                    translationUnit[keys[1]] = source.toString().trim();
+                    //translationUnit[keys[2]] = note.toString().trim();
+                });
             });
           }
         }
@@ -66,8 +82,11 @@ function processObject(object) {
   console.log("____________====================____________");
   jsToXml(object);
 }
-// fs.readFile(__dirname + '/en.xliff', function(err, data) {  
-//     parser.parseString(data, function (err, xmlObject) {
-//       processObject(xmlObject);
-//     });
-// });
+
+var readTranslates = function () {
+    fs.readFile(__dirname + '/en.xliff', function(err, data) {
+        parser.parseString(data, function (err, xmlObject) {
+            processObject(xmlObject);
+        });
+    });
+}
